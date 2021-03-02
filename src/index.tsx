@@ -69,12 +69,12 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
     }
     function getColor(entry:any) {
         if (entry.name=='Free') {
-            return 'green';
+            return '#93DE93';
         }
         if (entry.name == 'Over Capacity') {
             return 'red';
         }
-        return 'blue';
+        return '#C2B6FD';
     }
     let overloaded = false;
     let data = [{name:'Free',value:total - occupied},{name:'Occupied',value:occupied}];
