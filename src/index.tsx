@@ -1,6 +1,6 @@
 import * as React from "react";
 import { registerWidget, registerLink, registerUI, IContextProvider, } from './uxp';
-import { TitleBar, FilterPanel, WidgetWrapper, Select, useUpdateWidgetProps } from "uxp/components";
+import { TitleBar, FilterPanel, WidgetWrapper, Select, useUpdateWidgetProps, Modal, Loading, DataTable } from "uxp/components";
 import './styles.scss';
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { getDefaultCompilerOptions } from "typescript";
@@ -10,13 +10,23 @@ interface IWidgetProps {
     instanceId:string;
     carPark?:string;
 }
-
+interface IOccupant {
+    tenant: string;
+    vehicle: string;
+    arrived: string;
+}
 const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) => {
     let [carPark,setCarPark] = React.useState('');
     let [carparks,setCarParks] = React.useState([]);
     let [occupied,setOccupied] = React.useState<number|null>(null);
     let [total,setTotal] = React.useState(0);
     let [loadError,setLoadError] = React.useState('');
+
+    let [loadingOccupants,setLoadingOccupants] = React.useState(false);
+
+    let [showDialog,setShowDialog] = React.useState(false);
+
+    let [occupants,setOccupants] = React.useState<IOccupant[]>([]);
     React.useEffect(()=>{
         props.uxpContext.executeAction('CarPark','GetCarParks',{},{json:true})
         .then((data:any[]) => {
@@ -78,7 +88,7 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
     }
     let overloaded = false;
     let data = [{name:'Free',value:total - occupied},{name:'Occupied',value:occupied}];
-    debugger;    
+
     if (total < occupied) {
 
         overloaded  = true;
@@ -87,9 +97,61 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
         data[1].name = 'Capacity';
         data[1].value = total;
     }
-    console.log(data);
+
     function renderLoadError() {
         return <div style={{flex:1,textAlign:'center',color:'red'}}>{loadError}</div>
+    }
+
+    function loadOccupants() {
+        setOccupants([]);
+        setLoadingOccupants(true);
+        let action = 'GetOccupants';
+
+        if (!carPark) {
+            action = 'GetAllOccupants';
+
+        }
+        props.uxpContext.executeAction('CarPark',action,{name:carPark},{json:true})
+        .then((data:any)=>{
+            setLoadingOccupants(false);
+            debugger;
+            let occupants:IOccupant[] = [];
+            if (action == 'GetAllOccupants') {
+
+                for(var i in data) {
+
+                    if (!data[i] || !data[i].occupants) {
+                        continue;
+                    }
+
+                    for(var o in data[i].occupants) {
+                        occupants.push(data[i].occupants[o]);
+                    }
+                }
+
+            }  else {
+
+                if (data && data.occupants) {
+                    occupants = data.occupants as IOccupant[];
+                }
+            }
+            setOccupants(occupants.sort((x,y) =>Number(new Date(x.arrived)) - Number(new Date(y.arrived))));
+
+        }).catch(e =>{
+            setLoadingOccupants(false);
+        });
+    }
+
+    function showCurrentOccupiedItems() {
+        setShowDialog(true);
+        loadOccupants();
+    }
+
+    function wedgeClick(item:any) {
+        if (item.name == 'Occupied') {
+            showCurrentOccupiedItems();
+            return;
+        }
     }
     function renderPie() {
         return <ResponsiveContainer width="100%" height="100%">
@@ -103,20 +165,47 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
 
                     data={data}
                     label={true}
-                    //   cx={'50%'}
-                    //   cy={'50%'}
-                    innerRadius={100}
-                    outerRadius={150}
+                      cx={'50%'}
+                      cy={'50%'}
+                    innerRadius={'55%'}
+                    outerRadius={'85%'}
                     fill="#8884d8"
                     paddingAngle={5}
                     dataKey="value"
                 >
                     {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={getColor(entry)} />
+                        <Cell key={`cell-${index}`} onClick={(e)=>wedgeClick(entry)} fill={getColor(entry)} />
                     ))}
                 </Pie>
             </PieChart>
         </ResponsiveContainer>;
+    }
+
+    function renderModal() {
+        if (!showDialog) return;
+        return <Modal title={'Occupants'} show={showDialog} onClose={() => setShowDialog(false)} >
+            {
+                loadingOccupants?<Loading />:<div className='occupants'>
+                    <DataTable data={occupants}  pageSize={1000} columns={[
+                        {
+                            title:'Tenant',
+                            width:'50%',
+                            renderColumn:(item:any) => item.tenant
+                        },
+                        {
+                            title:'Vehicle',
+                            width:'25%',
+                            renderColumn:(item:any) => item.vehicle
+                        },
+                        {
+                            title:'Arrived',
+                            width:'25%',
+                            renderColumn:(item:any) => new Date(item.arrived).toString()
+                        }
+                    ]} />
+                </div>
+            }
+        </Modal>
     }
     return (
         <WidgetWrapper>
@@ -130,13 +219,15 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
                     loadError?
                     <div style={{flex:1,justifyContent:'center',alignItems:'center',display:'flex'}}>
                        {renderLoadError()}</div>:
-                     <div style={{flex:1}}>
+                     <div className='carpark-chart' style={{flex:1}}>
                          {renderPie()}
                     </div>
                
                 
                 }
-          
+          {
+              renderModal()
+          }
         </WidgetWrapper>
     )
 };
