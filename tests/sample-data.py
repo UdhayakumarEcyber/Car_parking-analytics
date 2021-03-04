@@ -21,14 +21,12 @@ def updateMasterData(url,apiKey):
     headers = {
         'Content-Type':'application/json',
         'Authorization':'APIKEY ' + apiKey,
-        'User-Agent':'Mozilla',
-        'Host':'510church.v4.iviva.cloud'
     }
     data = {
         'carparks':[{'name':k,'capacity':v['capacity']} for k,v in CarParks.items()]
     }
-    print(url,data)
-    r = requests.post(url  + '/Lucy/CarParks/carparks',headers=headers,data=json.dumps(data))
+
+    r = requests.post(url  + '/Lucy/CarPark/carparks',headers=headers,data=json.dumps(data))
     r.raise_for_status()
     print (r.text)
 def main():
