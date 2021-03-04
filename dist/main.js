@@ -10485,8 +10485,6 @@ function tail(items, count) {
         return items;
     }
     for (let i = items.length - count; i < items.length; i++) {
-        if (i >= count)
-            break;
         results.push(items[i]);
     }
     return results;
@@ -10500,6 +10498,7 @@ const CarparkOccupancyWidget = (props) => {
     let [loadingOccupants, setLoadingOccupants] = React.useState(false);
     let [showDialog, setShowDialog] = React.useState(false);
     let [occupants, setOccupants] = React.useState([]);
+    let [loading, setLoading] = React.useState(false);
     let [occupantType, setOccupantType] = React.useState('all');
     React.useEffect(() => {
         props.uxpContext.executeAction('CarPark', 'GetCarParks', {}, { json: true })
@@ -10515,13 +10514,16 @@ const CarparkOccupancyWidget = (props) => {
     }, []);
     React.useEffect(() => {
         if (!carPark) {
+            setLoading(true);
             props.uxpContext.executeAction('CarPark', 'GetTotalOccupancy', {}, { json: true })
                 .then((data) => {
+                setLoading(false);
                 setLoadError('');
                 setOccupied(Number(data['occupancy']));
                 setTotal(Number(data['capacity']));
             })
                 .catch(e => {
+                setLoading(true);
                 console.log('Error getting total carpark occupancy', e);
                 setOccupied(null);
                 setLoadError('Error getting total car park occupancy');
@@ -10533,13 +10535,18 @@ const CarparkOccupancyWidget = (props) => {
             setOccupied(null);
             return;
         }
+        setLoading(true);
         props.uxpContext.executeAction('CarPark', 'GetOccupancy', { 'name': carPark }, { json: true })
             .then((data) => {
+            setLoading(true);
             setLoadError('');
             setOccupied(Number(data['occupancy']));
             setTotal(Number(selectedCarPark.capacity));
         })
-            .catch(e => console.log('Error getting carpark occupancy', e));
+            .catch(e => {
+            setLoading(true);
+            console.log('Error getting carpark occupancy', e);
+        });
         setOccupied(null);
         setTotal(0);
         setLoadError('No data for car park: ' + carPark);
@@ -10617,7 +10624,7 @@ const CarparkOccupancyWidget = (props) => {
             showCurrentOccupiedItems();
             return;
         }
-        if (item.name == 'Occupied') {
+        if (item.name == 'Over Capacity') {
             setOccupantType('over-capacity');
             showCurrentOccupiedItems();
             return;
@@ -10640,21 +10647,21 @@ const CarparkOccupancyWidget = (props) => {
             occupantsToShow = tail(occupants, occupied - total);
         }
         return React.createElement(components_1.Modal, { title: (occupantType == 'over-capacity') ? 'Overflowing Occupants' : 'Occupancts', show: showDialog, onClose: () => setShowDialog(false) }, loadingOccupants ? React.createElement(components_1.Loading, null) : React.createElement("div", { className: 'occupants' },
-            React.createElement(components_1.DataTable, { data: occupants, pageSize: 1000, columns: [
+            React.createElement(components_1.DataTable, { data: occupantsToShow, pageSize: 1000, columns: [
                     {
                         title: 'Tenant',
                         width: '50%',
-                        renderColumn: (item) => item.tenant
+                        renderColumn: (item) => React.createElement("span", { style: { color: occupantType == 'over-capacity' ? 'red' : 'inherit' } }, item.tenant)
                     },
                     {
                         title: 'Vehicle',
                         width: '25%',
-                        renderColumn: (item) => item.vehicle
+                        renderColumn: (item) => React.createElement("span", { style: { color: occupantType == 'over-capacity' ? 'red' : 'inherit' } }, item.vehicle)
                     },
                     {
                         title: 'Arrived',
                         width: '25%',
-                        renderColumn: (item) => new Date(item.arrived).toString()
+                        renderColumn: (item) => React.createElement("span", { style: { color: occupantType == 'over-capacity' ? 'red' : 'inherit' } }, new Date(item.arrived).toString())
                     }
                 ] })));
     }

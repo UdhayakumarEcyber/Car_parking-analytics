@@ -33,7 +33,6 @@ function tail<T>(items:T[],count:number) {
         return items;
     }
     for(let i=items.length - count;i<items.length;i++) {
-        if (i >= count) break;
         results.push(items[i]);
     }
     return results;
@@ -50,6 +49,7 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
     let [showDialog,setShowDialog] = React.useState(false);
 
     let [occupants,setOccupants] = React.useState<IOccupant[]>([]);
+    let [loading,setLoading] = React.useState(false);
     let [occupantType,setOccupantType] = React.useState<IOccupantType>('all');
     React.useEffect(()=>{
         props.uxpContext.executeAction('CarPark','GetCarParks',{},{json:true})
@@ -65,13 +65,16 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
     },[]);
     React.useEffect(()=>{
         if (!carPark) {
+            setLoading(true);
             props.uxpContext.executeAction('CarPark','GetTotalOccupancy',{},{json:true})
             .then((data:any) => {
+                setLoading(false);
                 setLoadError('');
                 setOccupied(Number(data['occupancy']));
                 setTotal(Number(data['capacity']));
             })
             .catch(e => {
+                setLoading(true);
                 console.log('Error getting total carpark occupancy',e);
                 setOccupied(null);
                 setLoadError('Error getting total car park occupancy');
@@ -84,14 +87,20 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
             return;
         }
 
+        setLoading(true);
         props.uxpContext.executeAction('CarPark','GetOccupancy',{'name':carPark},{json:true})
         .then((data:any) => {
+            setLoading(true);
             setLoadError('');
             setOccupied(Number(data['occupancy']));
             setTotal(Number(selectedCarPark.capacity));
 
         })
-        .catch(e => console.log('Error getting carpark occupancy',e));
+        .catch(e => {
+            setLoading(true);
+            console.log('Error getting carpark occupancy',e);
+        });
+        
         setOccupied(null);
         setTotal(0);
         setLoadError('No data for car park: ' + carPark);
@@ -182,7 +191,7 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
             showCurrentOccupiedItems();
             return;
         }
-        if (item.name == 'Occupied') {
+        if (item.name == 'Over Capacity') {
             setOccupantType('over-capacity');
             showCurrentOccupiedItems();
             return;
@@ -228,21 +237,21 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
         return <Modal title={(occupantType=='over-capacity')?'Overflowing Occupants':'Occupancts'} show={showDialog} onClose={() => setShowDialog(false)} >
             {
                 loadingOccupants?<Loading />:<div className='occupants'>
-                    <DataTable data={occupants}  pageSize={1000} columns={[
+                    <DataTable data={occupantsToShow}  pageSize={1000} columns={[
                         {
                             title:'Tenant',
                             width:'50%',
-                            renderColumn:(item:any) => item.tenant
+                            renderColumn:(item:any) => <span style={{color:occupantType=='over-capacity'?'red':'inherit'}}>{item.tenant}</span>
                         },
                         {
                             title:'Vehicle',
                             width:'25%',
-                            renderColumn:(item:any) => item.vehicle
+                            renderColumn:(item:any) => <span style={{color:occupantType=='over-capacity'?'red':'inherit'}}>{item.vehicle}</span>
                         },
                         {
                             title:'Arrived',
                             width:'25%',
-                            renderColumn:(item:any) => new Date(item.arrived).toString()
+                            renderColumn:(item:any) => <span style={{color:occupantType=='over-capacity'?'red':'inherit'}}>{new Date(item.arrived).toString()}</span>
                         }
                     ]} />
                 </div>
