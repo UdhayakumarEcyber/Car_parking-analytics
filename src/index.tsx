@@ -15,6 +15,29 @@ interface IOccupant {
     vehicle: string;
     arrived: string;
 }
+declare type IOccupantType = 'all' | 'capacity' |'over-capacity';
+function head<T>(items:T[],count:number) {
+    let results:T[] = [];
+    if (items.length < count) {
+        return items;
+    }
+    for(let i=0;i<items.length;i++) {
+        if (i >= count) break;
+        results.push(items[i]);
+    }
+    return results;
+}
+function tail<T>(items:T[],count:number) {
+    let results:T[] = [];
+    if (items.length < count) {
+        return items;
+    }
+    for(let i=items.length - count;i<items.length;i++) {
+        if (i >= count) break;
+        results.push(items[i]);
+    }
+    return results;
+}
 const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) => {
     let [carPark,setCarPark] = React.useState('');
     let [carparks,setCarParks] = React.useState([]);
@@ -27,6 +50,7 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
     let [showDialog,setShowDialog] = React.useState(false);
 
     let [occupants,setOccupants] = React.useState<IOccupant[]>([]);
+    let [occupantType,setOccupantType] = React.useState<IOccupantType>('all');
     React.useEffect(()=>{
         props.uxpContext.executeAction('CarPark','GetCarParks',{},{json:true})
         .then((data:any[]) => {
@@ -149,6 +173,17 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
 
     function wedgeClick(item:any) {
         if (item.name == 'Occupied') {
+            setOccupantType('all');
+            showCurrentOccupiedItems();
+            return;
+        }
+        if (item.name == 'Capacity') {
+            setOccupantType('capacity');
+            showCurrentOccupiedItems();
+            return;
+        }
+        if (item.name == 'Occupied') {
+            setOccupantType('over-capacity');
             showCurrentOccupiedItems();
             return;
         }
@@ -183,7 +218,14 @@ const CarparkOccupancyWidget: React.FunctionComponent<IWidgetProps> = (props) =>
 
     function renderModal() {
         if (!showDialog) return;
-        return <Modal title={'Occupants'} show={showDialog} onClose={() => setShowDialog(false)} >
+        let occupantsToShow:IOccupant[] = occupants;
+        if (occupantType == 'capacity') {
+            occupantsToShow = head(occupants,total);
+        }
+        if (occupantType == 'over-capacity') {
+            occupantsToShow = tail(occupants,occupied - total);
+        }
+        return <Modal title={(occupantType=='over-capacity')?'Overflowing Occupants':'Occupancts'} show={showDialog} onClose={() => setShowDialog(false)} >
             {
                 loadingOccupants?<Loading />:<div className='occupants'>
                     <DataTable data={occupants}  pageSize={1000} columns={[

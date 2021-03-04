@@ -10467,6 +10467,30 @@ const components_1 = __webpack_require__(/*! uxp/components */ "uxp/components")
 __webpack_require__(/*! ./styles.scss */ "./src/styles.scss");
 const recharts_1 = __webpack_require__(/*! recharts */ "recharts");
 const CarParkIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3Mi44MDMiIGhlaWdodD0iNTUuMDI0IiB2aWV3Qm94PSIwIDAgNzIuODAzIDU1LjAyNCI+CiAgPGcgaWQ9Ikdyb3VwXzQwODYiIGRhdGEtbmFtZT0iR3JvdXAgNDA4NiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE1NjYgLTUxMi45MzMpIiBvcGFjaXR5PSIwLjUiPgogICAgPHBhdGggaWQ9Ikljb25fYXdlc29tZS1jYXIiIGRhdGEtbmFtZT0iSWNvbiBhd2Vzb21lLWNhciIgZD0iTTU0LjAzNSwxNi42aC02LjQ3bC0xLjgtNC41QTEyLjA0MywxMi4wNDMsMCwwLDAsMzQuNTI5LDQuNUgyMC44QTEyLjA0NiwxMi4wNDYsMCwwLDAsOS41NjUsMTIuMTA4bC0xLjgsNC41SDEuM0ExLjMsMS4zLDAsMCwwLC4wNCwxOC4yMTZsLjY0OCwyLjU5NGExLjMsMS4zLDAsMCwwLDEuMjU4Ljk4Mkg0LjExNWE2Ljg2OCw2Ljg2OCwwLDAsMC0yLjM4Niw1LjE4OHY1LjE4OEE2Ljg2LDYuODYsMCwwLDAsMy40NTgsMzYuN3Y1Ljg0NEEzLjQ1OSwzLjQ1OSwwLDAsMCw2LjkxNyw0NmgzLjQ1OGEzLjQ1OSwzLjQ1OSwwLDAsMCwzLjQ1OC0zLjQ1OFYzOS4wODNINDEuNXYzLjQ1OEEzLjQ1OSwzLjQ1OSwwLDAsMCw0NC45NTgsNDZoMy40NThhMy40NTksMy40NTksMCwwLDAsMy40NTgtMy40NThWMzYuN0E2Ljg1Niw2Ljg1NiwwLDAsMCw1My42LDMyLjE2N1YyNi45NzlhNi44NzEsNi44NzEsMCwwLDAtMi4zODUtNS4xODhoMi4xNjlhMS4zLDEuMywwLDAsMCwxLjI1OC0uOTgybC42NDgtMi41OTRBMS4zLDEuMywwLDAsMCw1NC4wMzUsMTYuNlpNMTUuOTg3LDE0LjY3N0E1LjE4OCw1LjE4OCwwLDAsMSwyMC44LDExLjQxN0gzNC41MjlhNS4xODgsNS4xODgsMCwwLDEsNC44MTcsMy4yNjFMNDEuNSwyMC4wNjNIMTMuODMzbDIuMTU0LTUuMzg1Wk0xMC4zNzUsMzIuMTQ1QTMuMjYyLDMuMjYyLDAsMCwxLDYuOTE3LDI4LjdhMy4yNjIsMy4yNjIsMCwwLDEsMy40NTgtMy40NDhjMi4wNzUsMCw1LjE4OCwzLjEsNS4xODgsNS4xNzFTMTIuNDUsMzIuMTQ1LDEwLjM3NSwzMi4xNDVabTM0LjU4MywwYy0yLjA3NSwwLTUuMTg4LjM0NS01LjE4OC0xLjcyNHMzLjExMy01LjE3MSw1LjE4OC01LjE3MUEzLjI2MiwzLjI2MiwwLDAsMSw0OC40MTcsMjguN2EzLjI2MiwzLjI2MiwwLDAsMS0zLjQ1OCwzLjQ0OFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE1NjYgNTIxLjk1NikiLz4KICAgIDxwYXRoIGlkPSJJY29uX21hdGVyaWFsLXNob3ctY2hhcnQiIGRhdGEtbmFtZT0iSWNvbiBtYXRlcmlhbC1zaG93LWNoYXJ0IiBkPSJNNS42MiwyNy43ODksMTYuMSwxOC43NDlsNi45ODgsNi4wMTcsMTQuODQ5LTE0LjM4TDM1LjQ3Niw4LjI2NSwyMy4wOSwyMC4yNTMsMTYuMSwxNC4yMzYsMywyNS41MzNaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjAwLjg2NCA1MDQuNjY4KSIvPgogIDwvZz4KPC9zdmc+Cg==';
+function head(items, count) {
+    let results = [];
+    if (items.length < count) {
+        return items;
+    }
+    for (let i = 0; i < items.length; i++) {
+        if (i >= count)
+            break;
+        results.push(items[i]);
+    }
+    return results;
+}
+function tail(items, count) {
+    let results = [];
+    if (items.length < count) {
+        return items;
+    }
+    for (let i = items.length - count; i < items.length; i++) {
+        if (i >= count)
+            break;
+        results.push(items[i]);
+    }
+    return results;
+}
 const CarparkOccupancyWidget = (props) => {
     let [carPark, setCarPark] = React.useState('');
     let [carparks, setCarParks] = React.useState([]);
@@ -10476,6 +10500,7 @@ const CarparkOccupancyWidget = (props) => {
     let [loadingOccupants, setLoadingOccupants] = React.useState(false);
     let [showDialog, setShowDialog] = React.useState(false);
     let [occupants, setOccupants] = React.useState([]);
+    let [occupantType, setOccupantType] = React.useState('all');
     React.useEffect(() => {
         props.uxpContext.executeAction('CarPark', 'GetCarParks', {}, { json: true })
             .then((data) => {
@@ -10583,6 +10608,17 @@ const CarparkOccupancyWidget = (props) => {
     }
     function wedgeClick(item) {
         if (item.name == 'Occupied') {
+            setOccupantType('all');
+            showCurrentOccupiedItems();
+            return;
+        }
+        if (item.name == 'Capacity') {
+            setOccupantType('capacity');
+            showCurrentOccupiedItems();
+            return;
+        }
+        if (item.name == 'Occupied') {
+            setOccupantType('over-capacity');
             showCurrentOccupiedItems();
             return;
         }
@@ -10596,7 +10632,14 @@ const CarparkOccupancyWidget = (props) => {
     function renderModal() {
         if (!showDialog)
             return;
-        return React.createElement(components_1.Modal, { title: 'Occupants', show: showDialog, onClose: () => setShowDialog(false) }, loadingOccupants ? React.createElement(components_1.Loading, null) : React.createElement("div", { className: 'occupants' },
+        let occupantsToShow = occupants;
+        if (occupantType == 'capacity') {
+            occupantsToShow = head(occupants, total);
+        }
+        if (occupantType == 'over-capacity') {
+            occupantsToShow = tail(occupants, occupied - total);
+        }
+        return React.createElement(components_1.Modal, { title: (occupantType == 'over-capacity') ? 'Overflowing Occupants' : 'Occupancts', show: showDialog, onClose: () => setShowDialog(false) }, loadingOccupants ? React.createElement(components_1.Loading, null) : React.createElement("div", { className: 'occupants' },
             React.createElement(components_1.DataTable, { data: occupants, pageSize: 1000, columns: [
                     {
                         title: 'Tenant',
